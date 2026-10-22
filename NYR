@@ -4,24 +4,20 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local Lighting = game:GetService("Lighting")
 local LP = Players.LocalPlayer
 
 print("🔥 NYR Yükleniyor...")
 
--- ═══ AYARLAR (STATE) ═══
 local State = {
     AimbotAktif = false,
     ESP_Aktif = false,
     FlyAktif = false,
     NoclipAktif = false,
     HitboxAktif = false,
-    OtomatikVur = false,
     Hiz = 50,
     HitboxBoyutu = 5
 }
 
--- ═══ YARDIMCI FONKSİYONLAR ═══
 local function YeniObje(tur, ozellikler, ebeveyn)
     local obje = Instance.new(tur)
     for k, v in pairs(ozellikler) do
@@ -31,7 +27,6 @@ local function YeniObje(tur, ozellikler, ebeveyn)
     return obje
 end
 
--- ═══ ARAYÜZ (UI) ═══
 local ScreenGui = YeniObje("ScreenGui", {
     Name = "NYR_Menu",
     ResetOnSpawn = false,
@@ -49,7 +44,6 @@ local AnaFrame = YeniObje("Frame", {
 YeniObje("UICorner", {CornerRadius = UDim.new(0, 10)}, AnaFrame)
 YeniObje("UIStroke", {Color = Color3.fromRGB(200, 50, 50), Thickness = 1.5}, AnaFrame)
 
--- Başlık Çubuğu
 local UstBar = YeniObje("Frame", {
     Size = UDim2.new(1, 0, 0, 40),
     BackgroundColor3 = Color3.fromRGB(25, 25, 32),
@@ -59,7 +53,7 @@ local UstBar = YeniObje("Frame", {
 YeniObje("UICorner", {CornerRadius = UDim.new(0, 10)}, UstBar)
 YeniObje("Frame", {Size = UDim2.new(1, 0, 0, 15), Position = UDim2.new(0, 0, 1, -15), BackgroundColor3 = Color3.fromRGB(25, 25, 32), BorderSizePixel = 0}, UstBar)
 
-local Baslik = YeniObje("TextLabel", {
+YeniObje("TextLabel", {
     Size = UDim2.new(1, -60, 1, 0),
     Position = UDim2.new(0, 15, 0, 0),
     BackgroundTransparency = 1,
@@ -84,7 +78,6 @@ local KapatBtn = YeniObje("TextButton", {
 YeniObje("UICorner", {CornerRadius = UDim.new(0, 8)}, KapatBtn)
 KapatBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 
--- Sürükleme
 local surukle, baslangic, baslangicPos
 UstBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -103,14 +96,12 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- İçerik Alanı
 local Icerik = YeniObje("Frame", {
     Size = UDim2.new(1, -20, 1, -50),
     Position = UDim2.new(0, 10, 0, 45),
     BackgroundTransparency = 1
 }, AnaFrame)
 
--- Toggle (Aç/Kapa) Butonu Oluşturucu
 local function ToggleOlustur(isim, yPos, callback)
     local Kutu = YeniObje("Frame", {
         Size = UDim2.new(0.48, 0, 0, 35),
@@ -164,7 +155,6 @@ local function ToggleOlustur(isim, yPos, callback)
     end)
 end
 
--- Slider (Kaydırıcı) Oluşturucu
 local function SliderOlustur(isim, yPos, min, max, varsayilan, callback)
     local Kutu = YeniObje("Frame", {
         Size = UDim2.new(0.48, 0, 0, 35),
@@ -207,34 +197,32 @@ local function SliderOlustur(isim, yPos, min, max, varsayilan, callback)
     end)
 end
 
--- ═══ ÖZELLİKLERİ YERLEŞTİR ═══
+-- Butonlar (Düzeltildi)
 ToggleOlustur("ESP (Duvar Arkası)", 0, function(a) State.ESP_Aktif = a end)
 ToggleOlustur("Aimbot (Nişan Alma)", 42, function(a) State.AimbotAktif = a end)
-ToggleOlustur("Fly (Uçuş)", 0, function(a) State.FlyAktif = a end) -- 2. sütuna geçmek için y pozisyonu aynı, x farklı olmalı (aşağıda düzeltiyorum)
+ToggleOlustur("Fly (Uçuş)", 0, function(a) State.FlyAktif = a end)
 ToggleOlustur("Noclip (Duvardan Geç)", 42, function(a) State.NoclipAktif = a end)
 
--- Konum düzeltmeleri (İkinci sütun için)
+-- İkinci sütun konum düzeltmesi (Fly ve Noclip sağa kaydırıldı)
 Icerik:GetChildren()[2].Position = UDim2.new(0.52, 0, 0, 0)
 Icerik:GetChildren()[3].Position = UDim2.new(0.52, 0, 0, 42)
 
--- Slider'lar
 SliderOlustur("Yürüme Hızı", 90, 16, 200, 50, function(v) State.Hiz = v end)
 SliderOlustur("Hitbox Boyutu", 130, 1, 20, 5, function(v) State.HitboxBoyutu = v end)
 
--- Alt Bilgi
-local AltBilgi = YeniObje("TextLabel", {
+YeniObje("TextLabel", {
     Size = UDim2.new(1, 0, 0, 20),
     Position = UDim2.new(0, 0, 1, -20),
     BackgroundTransparency = 1,
-    Text = "NYR",
+    Text = "NYR | v1.0",
     TextColor3 = Color3.fromRGB(120, 120, 140),
     TextSize = 11,
     Font = Enum.Font.Gotham
 }, Icerik)
 
--- ═══ MOTOR (HİLE MANTIĞI) ═══
+-- ═══ MOTOR ═══
 
--- ESP (Duvar Arkası Görme)
+-- ESP
 RunService.RenderStepped:Connect(function()
     for _, oyuncu in pairs(Players:GetPlayers()) do
         if oyuncu ~= LP and oyuncu.Character then
@@ -255,11 +243,11 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Fly (Uçuş) ve Noclip
+-- Fly
 local flyBaglanti
-ToggleOlustur("Fly (Uçuş)", 0, function(a) -- Bunu tekrar ekledim çünkü yukarıda karıştı
+local function FlyGuncelle(a)
     State.FlyAktif = a
-    if a then
+    if a and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
         local BV = Instance.new("BodyVelocity", LP.Character.HumanoidRootPart)
         BV.Name = "NYR_Fly"
         BV.MaxForce = Vector3.new(1e5, 1e5, 1e5)
@@ -271,12 +259,14 @@ ToggleOlustur("Fly (Uçuş)", 0, function(a) -- Bunu tekrar ekledim çünkü yuk
             if UserInputService:IsKeyDown(Enum.KeyCode.D) then BV.Velocity = BV.Velocity + workspace.CurrentCamera.CFrame.RightVector * State.Hiz end
         end)
     else
-        if LP.Character.HumanoidRootPart:FindFirstChild("NYR_Fly") then LP.Character.HumanoidRootPart.NYR_Fly:Destroy() end
+        if LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") and LP.Character.HumanoidRootPart:FindFirstChild("NYR_Fly") then 
+            LP.Character.HumanoidRootPart.NYR_Fly:Destroy() 
+        end
         if flyBaglanti then flyBaglanti:Disconnect() end
     end
-end)
+end
 
--- Noclip Mantığı (Sadece bir kez bağlanması yeterli)
+-- Noclip
 RunService.Stepped:Connect(function()
     if State.NoclipAktif and LP.Character then
         for _, v in pairs(LP.Character:GetDescendants()) do
@@ -285,14 +275,14 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- Yürüme Hızı (WalkSpeed)
+-- Yürüme Hızı
 RunService.RenderStepped:Connect(function()
     if LP.Character and LP.Character:FindFirstChild("Humanoid") then
         LP.Character.Humanoid.WalkSpeed = State.Hiz
     end
 end)
 
--- Hitbox Büyütme
+-- Hitbox
 RunService.RenderStepped:Connect(function()
     for _, oyuncu in pairs(Players:GetPlayers()) do
         if oyuncu ~= LP and oyuncu.Character and oyuncu.Character:FindFirstChild("HumanoidRootPart") then
@@ -308,13 +298,13 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Basit Aimbot (En yakın oyuncuya bak)
+-- Aimbot
 RunService.RenderStepped:Connect(function()
-    if State.AimbotAktif then
+    if State.AimbotAktif and LP.Character and LP.Character:FindFirstChild("Head") then
         local enYakin, enKisaMesafe = nil, math.huge
         for _, oyuncu in pairs(Players:GetPlayers()) do
             if oyuncu ~= LP and oyuncu.Character and oyuncu.Character:FindFirstChild("Head") then
-                local mesafe = (oyuncu.Character.Head.Position - workspace.CurrentCamera.CFrame.Position).Magnitude
+                local mesafe = (oyuncu.Character.Head.Position - LP.Character.Head.Position).Magnitude
                 if mesafe < enKisaMesafe then
                     enKisaMesafe = mesafe
                     enYakin = oyuncu.Character.Head
@@ -322,12 +312,13 @@ RunService.RenderStepped:Connect(function()
             end
         end
         if enYakin then
-            workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, enYakin.Position)
+            local kameraPos = workspace.CurrentCamera.CFrame.Position
+            workspace.CurrentCamera.CFrame = CFrame.lookAt(kameraPos, enYakin.Position)
         end
     end
 end)
 
--- Silahı Otomatik Al (Auto Grab Gun)
+-- Silahı Otomatik Al
 task.spawn(function()
     while true do
         task.wait(0.5)
