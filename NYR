@@ -1,23 +1,29 @@
--- NYR | Modern UI & Çalışan Hile Motoru
+-- BEST CLIENT v10.13 - Fixlenmiş ve Tam Sürüm
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local LP = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
 
--- ═══ AYARLAR (MOTOR) ═══
+print("[BEST CLIENT] Yükleniyor...")
+
+-- ═══ AYARLAR & STATE ═══
 local State = {
+    SelectedMode = "LEGIT",
+    CameraAimbot = false,
+    AutoShootCamera = false,
+    CrosshairAimbot = false,
+    AutoShootCrosshair = false,
+    OnlyMurderer = false,
+    WallCheck = true,
+    FOV = 45,
     ESP_Aktif = false,
-    AimbotAktif = false,
-    AutoShootAktif = false,
     FlyAktif = false,
     NoclipAktif = false,
     HizAktif = false,
-    AutoGunAktif = false,
     HitboxAktif = false,
-    Hiz = 50,
-    HitboxBoyutu = 5
+    AutoGunAktif = false
 }
 
 local function YeniObje(tur, ozellikler, ebeveyn)
@@ -29,36 +35,50 @@ end
 
 -- ═══ RENK PALETİ ═══
 local Renkler = {
-    ArkaPlan = Color3.fromRGB(16, 14, 20),
-    SolMenuArka = Color3.fromRGB(12, 10, 15),
-    KutuArka = Color3.fromRGB(28, 24, 33),
-    AktifSekmeArka = Color3.fromRGB(45, 32, 48),
-    Pembe = Color3.fromRGB(235, 155, 210),
-    Yazı = Color3.fromRGB(240, 240, 240),
-    GriYazı = Color3.fromRGB(130, 125, 140),
-    SwitchKapali = Color3.fromRGB(45, 40, 50)
+    ArkaPlan = Color3.fromRGB(13, 10, 15),
+    SolMenuArka = Color3.fromRGB(18, 14, 21),
+    KutuArka = Color3.fromRGB(24, 18, 28),
+    AktifSekmeArka = Color3.fromRGB(55, 30, 48),
+    Pembe = Color3.fromRGB(240, 130, 190),
+    Yazı = Color3.fromRGB(245, 245, 245),
+    GriYazı = Color3.fromRGB(140, 130, 145),
+    SwitchKapali = Color3.fromRGB(35, 28, 40)
 }
 
-local ScreenGui = YeniObje("ScreenGui", {Name = "NYR_UI", ResetOnSpawn = false}, game:GetService("CoreGui"))
+-- ═══ ARAYÜZ (ScreenGui) ═══
+local ScreenGui = YeniObje("ScreenGui", {
+    Name = "BestClient_UI", 
+    ResetOnSpawn = false,
+    DisplayOrder = 999,
+    ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+})
+
+local success, err = pcall(function()
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end)
+if not success then
+    ScreenGui.Parent = game:GetService("CoreGui")
+end
+
 local AnaFrame = YeniObje("Frame", {
-    Size = UDim2.new(0, 700, 0, 450),
-    Position = UDim2.new(0.5, -350, 0.5, -225),
+    Size = UDim2.new(0, 720, 0, 480),
+    Position = UDim2.new(0.5, -360, 0.5, -240),
     BackgroundColor3 = Renkler.ArkaPlan,
     BorderSizePixel = 0,
     Active = true
 }, ScreenGui)
-YeniObje("UICorner", {CornerRadius = UDim.new(0, 8)}, AnaFrame)
+YeniObje("UICorner", {CornerRadius = UDim.new(0, 10)}, AnaFrame)
 
 -- ═══ SÜRÜKLEME ═══
 local surukle, baslangic, baslangicPos
 AnaFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         surukle = true; baslangic = input.Position; baslangicPos = AnaFrame.Position
         input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then surukle = false end end)
     end
 end)
 UserInputService.InputChanged:Connect(function(input)
-    if surukle and input.UserInputType == Enum.UserInputType.MouseMovement then
+    if surukle and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         local delta = input.Position - baslangic
         AnaFrame.Position = UDim2.new(baslangicPos.X.Scale, baslangicPos.X.Offset + delta.X, baslangicPos.Y.Scale, baslangicPos.Y.Offset + delta.Y)
     end
@@ -66,311 +86,338 @@ end)
 
 -- ═══ SOL MENÜ ═══
 local SolMenu = YeniObje("Frame", {
-    Size = UDim2.new(0, 200, 1, 0), BackgroundColor3 = Renkler.SolMenuArka, BorderSizePixel = 0
+    Size = UDim2.new(0, 180, 1, 0), BackgroundColor3 = Renkler.SolMenuArka, BorderSizePixel = 0
 }, AnaFrame)
-YeniObje("UICorner", {CornerRadius = UDim.new(0, 8)}, SolMenu)
+YeniObje("UICorner", {CornerRadius = UDim.new(0, 10)}, SolMenu)
 
-YeniObje("Frame", {Size = UDim2.new(0, 10, 0, 10), Position = UDim2.new(0, 20, 0, 25), BackgroundColor3 = Renkler.Pembe}, SolMenu)
-YeniObje("UICorner", {CornerRadius = UDim.new(1, 0)}, SolMenu:GetChildren()[1])
 YeniObje("TextLabel", {
-    Size = UDim2.new(1, -40, 0, 20), Position = UDim2.new(0, 40, 0, 20),
-    BackgroundTransparency = 1, Text = "NYR", TextColor3 = Renkler.Yazı, TextSize = 20, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Left
+    Size = UDim2.new(1, -20, 0, 20), Position = UDim2.new(0, 15, 0, 15),
+    BackgroundTransparency = 1, Text = "BEST CLIENT", TextColor3 = Renkler.Yazı,
+    TextSize = 16, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Left
 }, SolMenu)
 YeniObje("TextLabel", {
-    Size = UDim2.new(1, -40, 0, 15), Position = UDim2.new(0, 40, 0, 40),
-    BackgroundTransparency = 1, Text = "v2.5 · Türkçe", TextColor3 = Renkler.GriYazı, TextSize = 11, Font = Enum.Font.Gotham, TextXAlignment = Enum.TextXAlignment.Left
+    Size = UDim2.new(1, -20, 0, 15), Position = UDim2.new(0, 15, 0, 32),
+    BackgroundTransparency = 1, Text = "v10.13 · COMMUNITY EDITION", TextColor3 = Renkler.GriYazı,
+    TextSize = 9, Font = Enum.Font.Gotham, TextXAlignment = Enum.TextXAlignment.Left
 }, SolMenu)
 
 -- ═══ SAĞ İÇERİK ═══
 local Icerik = YeniObje("Frame", {
-    Size = UDim2.new(1, -200, 1, 0), Position = UDim2.new(0, 200, 0, 0), BackgroundTransparency = 1
+    Size = UDim2.new(1, -180, 1, 0), Position = UDim2.new(0, 180, 0, 0), BackgroundTransparency = 1
 }, AnaFrame)
 
-local IcerikBaslik = YeniObje("TextLabel", {
-    Size = UDim2.new(1, -80, 0, 30), Position = UDim2.new(0, 25, 0, 25),
-    BackgroundTransparency = 1, Text = "Savaş", TextColor3 = Renkler.Yazı, TextSize = 20, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Left
-}, Icerik)
-
 local KapatBtn = YeniObje("TextButton", {
-    Size = UDim2.new(0, 30, 0, 30), Position = UDim2.new(1, -45, 0, 20),
-    BackgroundColor3 = Color3.fromRGB(35, 30, 40), Text = "×", TextColor3 = Renkler.Yazı,
-    TextSize = 20, Font = Enum.Font.GothamBold, BorderSizePixel = 0
+    Size = UDim2.new(0, 25, 0, 25), Position = UDim2.new(1, -35, 0, 15),
+    BackgroundColor3 = Color3.fromRGB(25, 20, 30), Text = "✕", TextColor3 = Renkler.Yazı,
+    TextSize = 14, Font = Enum.Font.GothamBold, BorderSizePixel = 0
 }, Icerik)
-YeniObje("UICorner", {CornerRadius = UDim.new(0, 6)}, KapatBtn)
+YeniObje("UICorner", {CornerRadius = UDim.new(0, 5)}, KapatBtn)
 KapatBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 
--- ═══ SEKME SİSTEMİ ═══
+local BaslikYazi = YeniObje("TextLabel", {
+    Size = UDim2.new(0, 200, 0, 25), Position = UDim2.new(0, 25, 0, 15),
+    BackgroundTransparency = 1, Text = "HVH", TextColor3 = Renkler.Yazı, TextSize = 22, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Left
+}, Icerik)
+
+-- ═══ SEKME OLUŞTURUCU ═══
 local Sekmeler = {}
 local function SekmeEkle(isim, ikon, sira)
     local Btn = YeniObje("TextButton", {
-        Size = UDim2.new(1, -30, 0, 45), Position = UDim2.new(0, 15, 0, 80 + (sira * 50)),
+        Size = UDim2.new(1, -20, 0, 40), Position = UDim2.new(0, 10, 0, 65 + (sira * 46)),
         BackgroundColor3 = Renkler.SolMenuArka, Text = "", BorderSizePixel = 0, AutoButtonColor = false
     }, SolMenu)
-    YeniObje("UICorner", {CornerRadius = UDim.new(0, 6)}, Btn)
-    
-    local Cizgi = YeniObje("Frame", {
-        Size = UDim2.new(0, 4, 1, -10), Position = UDim2.new(0, 0, 0, 5),
-        BackgroundColor3 = Renkler.Pembe, Visible = false, BorderSizePixel = 0
-    }, Btn)
-    YeniObje("UICorner", {CornerRadius = UDim.new(1, 0)}, Cizgi)
+    YeniObje("UICorner", {CornerRadius = UDim.new(0, 8)}, Btn)
 
     local IkonLbl = YeniObje("TextLabel", {
-        Size = UDim2.new(0, 30, 1, 0), Position = UDim2.new(0, 15, 0, 0),
-        BackgroundTransparency = 1, Text = ikon, TextColor3 = Renkler.GriYazı, TextSize = 18, Font = Enum.Font.Gotham
+        Size = UDim2.new(0, 30, 1, 0), Position = UDim2.new(0, 10, 0, 0),
+        BackgroundTransparency = 1, Text = ikon, TextColor3 = Renkler.GriYazı, TextSize = 15, Font = Enum.Font.Gotham
     }, Btn)
 
     local Txt = YeniObje("TextLabel", {
-        Size = UDim2.new(1, -50, 1, 0), Position = UDim2.new(0, 50, 0, 0),
+        Size = UDim2.new(1, -45, 1, 0), Position = UDim2.new(0, 40, 0, 0),
         BackgroundTransparency = 1, Text = isim, TextColor3 = Renkler.GriYazı,
-        TextSize = 14, Font = Enum.Font.GothamMedium, TextXAlignment = Enum.TextXAlignment.Left
+        TextSize = 13, Font = Enum.Font.GothamMedium, TextXAlignment = Enum.TextXAlignment.Left
     }, Btn)
 
     local Sayfa = YeniObje("ScrollingFrame", {
-        Size = UDim2.new(1, -50, 1, -80), Position = UDim2.new(0, 25, 0, 70),
-        BackgroundTransparency = 1, Visible = false, ScrollBarThickness = 0, CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y
+        Size = UDim2.new(1, -40, 1, -55), Position = UDim2.new(0, 20, 0, 45),
+        BackgroundTransparency = 1, Visible = false, ScrollBarThickness = 2, ScrollBarImageColor3 = Renkler.Pembe,
+        CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y
     }, Icerik)
     YeniObje("UIListLayout", {Padding = UDim.new(0, 8)}, Sayfa)
 
-    Sekmeler[isim] = {Buton = Btn, Cizgi = Cizgi, Yazı = Txt, Ikon = IkonLbl, Sayfa = Sayfa}
+    Sekmeler[isim] = {Buton = Btn, Yazı = Txt, Ikon = IkonLbl, Sayfa = Sayfa}
 
     Btn.MouseButton1Click:Connect(function()
         for _, s in pairs(Sekmeler) do
-            s.Sayfa.Visible = false; s.Cizgi.Visible = false
-            s.Yazı.TextColor3 = Renkler.GriYazı; s.Ikon.TextColor3 = Renkler.GriYazı
+            s.Sayfa.Visible = false
+            s.Yazı.TextColor3 = Renkler.GriYazı
+            s.Ikon.TextColor3 = Renkler.GriYazı
             TweenService:Create(s.Buton, TweenInfo.new(0.15), {BackgroundColor3 = Renkler.SolMenuArka}):Play()
         end
-        Sayfa.Visible = true; Cizgi.Visible = true
-        Txt.TextColor3 = Renkler.Yazı; IkonLbl.TextColor3 = Renkler.Yazı
-        IcerikBaslik.Text = isim
+        Sayfa.Visible = true
+        Txt.TextColor3 = Renkler.Yazı
+        IkonLbl.TextColor3 = Renkler.Yazı
+        BaslikYazi.Text = isim
         TweenService:Create(Btn, TweenInfo.new(0.15), {BackgroundColor3 = Renkler.AktifSekmeArka}):Play()
     end)
     return Sayfa
 end
 
--- ═══ ÇALIŞAN MODERN SWITCH ═══
-local function SwitchEkle(ebeveyn, isim, aciklama, callback)
+-- ═══ SWITCH BİLEŞENİ ═══
+local function SwitchEkle(ebeveyn, isim, aciklama, varsayilan, callback)
     local Kutu = YeniObje("Frame", {
-        Size = UDim2.new(1, -10, 0, 55), BackgroundColor3 = Renkler.KutuArka, BorderSizePixel = 0
+        Size = UDim2.new(1, -10, 0, 52), BackgroundColor3 = Renkler.KutuArka, BorderSizePixel = 0
     }, ebeveyn)
-    YeniObje("UICorner", {CornerRadius = UDim.new(0, 6)}, Kutu)
+    YeniObje("UICorner", {CornerRadius = UDim.new(0, 8)}, Kutu)
 
     YeniObje("TextLabel", {
-        Size = UDim2.new(0.75, 0, 0, 20), Position = UDim2.new(0, 15, 0, 10),
+        Size = UDim2.new(0.7, 0, 0, 18), Position = UDim2.new(0, 15, 0, 8),
         BackgroundTransparency = 1, Text = isim, TextColor3 = Renkler.Yazı,
-        TextSize = 13, Font = Enum.Font.GothamMedium, TextXAlignment = Enum.TextXAlignment.Left
+        TextSize = 13, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Left
     }, Kutu)
 
     YeniObje("TextLabel", {
-        Size = UDim2.new(0.75, 0, 0, 15), Position = UDim2.new(0, 15, 0, 30),
+        Size = UDim2.new(0.7, 0, 0, 15), Position = UDim2.new(0, 15, 0, 27),
         BackgroundTransparency = 1, Text = aciklama, TextColor3 = Renkler.GriYazı,
-        TextSize = 11, Font = Enum.Font.Gotham, TextXAlignment = Enum.TextXAlignment.Left
-    }, Kutu)
-
-    YeniObje("TextLabel", {
-        Size = UDim2.new(0, 20, 0, 20), Position = UDim2.new(1, -90, 0.5, -10),
-        BackgroundTransparency = 1, Text = "-", TextColor3 = Renkler.GriYazı,
-        TextSize = 16, Font = Enum.Font.GothamBold
+        TextSize = 10, Font = Enum.Font.Gotham, TextXAlignment = Enum.TextXAlignment.Left
     }, Kutu)
 
     local Btn = YeniObje("TextButton", {
-        Size = UDim2.new(0, 45, 0, 22), Position = UDim2.new(1, -55, 0.5, -11),
-        BackgroundColor3 = Renkler.SwitchKapali, Text = "", BorderSizePixel = 0
+        Size = UDim2.new(0, 42, 0, 22), Position = UDim2.new(1, -55, 0.5, -11),
+        BackgroundColor3 = varsayilan and Renkler.Pembe or Renkler.SwitchKapali, Text = "", BorderSizePixel = 0
     }, Kutu)
     YeniObje("UICorner", {CornerRadius = UDim.new(1, 0)}, Btn)
 
     local Yuvarlak = YeniObje("Frame", {
-        Size = UDim2.new(0, 16, 0, 16), Position = UDim2.new(0, 3, 0.5, -8),
-        BackgroundColor3 = Color3.fromRGB(200,200,200), BorderSizePixel = 0
+        Size = UDim2.new(0, 16, 0, 16), 
+        Position = varsayilan and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255), BorderSizePixel = 0
     }, Btn)
     YeniObje("UICorner", {CornerRadius = UDim.new(1, 0)}, Yuvarlak)
 
-    local aktif = false
+    local aktif = varsayilan
     Btn.MouseButton1Click:Connect(function()
         aktif = not aktif
         if aktif then
-            TweenService:Create(Btn, TweenInfo.new(0.2), {BackgroundColor3 = Renkler.Pembe}):Play()
-            TweenService:Create(Yuvarlak, TweenInfo.new(0.2), {Position = UDim2.new(1, -19, 0.5, -8), BackgroundColor3 = Color3.fromRGB(255,255,255)}):Play()
+            TweenService:Create(Btn, TweenInfo.new(0.18), {BackgroundColor3 = Renkler.Pembe}):Play()
+            TweenService:Create(Yuvarlak, TweenInfo.new(0.18), {Position = UDim2.new(1, -19, 0.5, -8)}):Play()
         else
-            TweenService:Create(Btn, TweenInfo.new(0.2), {BackgroundColor3 = Renkler.SwitchKapali}):Play()
-            TweenService:Create(Yuvarlak, TweenInfo.new(0.2), {Position = UDim2.new(0, 3, 0.5, -8), BackgroundColor3 = Color3.fromRGB(200,200,200)}):Play()
+            TweenService:Create(Btn, TweenInfo.new(0.18), {BackgroundColor3 = Renkler.SwitchKapali}):Play()
+            TweenService:Create(Yuvarlak, TweenInfo.new(0.18), {Position = UDim2.new(0, 3, 0.5, -8)}):Play()
         end
         if callback then callback(aktif) end
     end)
 end
 
--- ═══ SEKMELERİ OLUŞTUR ═══
-local GorselSayfa = SekmeEkle("Görsel", "👁", 0)
-local SavasSayfa = SekmeEkle("Savaş", "⚔", 1)
-local FarmSayfa = SekmeEkle("Farm", "💰", 2)
-local HareketSayfa = SekmeEkle("Hareket", "💨", 3)
+-- ═══ SEKMELERİ TANIMLA ═══
+local VisualSayfa = SekmeEkle("Визуал", "✦", 0)
+local HVHSayfa    = SekmeEkle("HVH", "⚡", 1)
+local FarmSayfa   = SekmeEkle("Фарм", "🎯", 2)
+local MoveSayfa   = SekmeEkle("Движение", "✈", 3)
+local MiscSayfa   = SekmeEkle("Прочее", "⚙", 4)
+local ViewSayfa   = SekmeEkle("Вид", "👁", 5)
+local DevSayfa    = SekmeEkle("DEV", "🛠", 6)
 
--- ═══ SAVAŞ SAYFASI (Motor Bağlantılı) ═══
-YeniObje("TextLabel", {
-    Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1, 
-    Text = "Oyun Modu", TextColor3 = Renkler.Yazı, TextSize = 14, Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Left
-}, SavasSayfa)
+-- ═══ HVH SAYFASI ═══
+local ModeFrame = YeniObje("Frame", {
+    Size = UDim2.new(1, -10, 0, 40), BackgroundColor3 = Renkler.KutuArka, BorderSizePixel = 0
+}, HVHSayfa)
+YeniObje("UICorner", {CornerRadius = UDim.new(0, 8)}, ModeFrame)
 
-local SegFrame = YeniObje("Frame", {Size = UDim2.new(1, -10, 0, 40), BackgroundColor3 = Renkler.KutuArka, BorderSizePixel = 0}, SavasSayfa)
-YeniObje("UICorner", {CornerRadius = UDim.new(0, 6)}, SegFrame)
-local modlar = {"GİZLİ", "DENGELİ", "SERT"}
-local segButonlar = {}
-for i, mod in ipairs(modlar) do
-    local ModBtn = YeniObje("TextButton", {
-        Size = UDim2.new(0.33, -4, 1, -8), Position = UDim2.new((i-1)*0.33, 4, 0, 4),
-        BackgroundColor3 = (i==2 and Renkler.Pembe or Color3.fromRGB(40,35,45)), 
-        Text = mod, TextColor3 = (i==2 and Color3.fromRGB(20,20,20) or Renkler.GriYazı),
-        Font = Enum.Font.GothamBold, TextSize = 12, BorderSizePixel = 0, AutoButtonColor = false
-    }, SegFrame)
-    YeniObje("UICorner", {CornerRadius = UDim.new(0, 4)}, ModBtn)
-    table.insert(segButonlar, ModBtn)
-    
-    ModBtn.MouseButton1Click:Connect(function()
-        for _, btn in ipairs(segButonlar) do
-            TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(40,35,45), TextColor3 = Renkler.GriYazı}):Play()
+local Modes = {"LEGIT", "MEDIUM", "HVH"}
+local ModeBtns = {}
+
+for i, mName in ipairs(Modes) do
+    local mBtn = YeniObje("TextButton", {
+        Size = UDim2.new(0.32, 0, 0.8, 0), Position = UDim2.new((i-1)*0.33 + 0.01, 0, 0.1, 0),
+        BackgroundColor3 = (mName == "LEGIT") and Renkler.Pembe or Renkler.SolMenuArka,
+        Text = mName, TextColor3 = Renkler.Yazı, TextSize = 12, Font = Enum.Font.GothamBold, BorderSizePixel = 0
+    }, ModeFrame)
+    YeniObje("UICorner", {CornerRadius = UDim.new(0, 6)}, mBtn)
+    ModeBtns[mName] = mBtn
+
+    mBtn.MouseButton1Click:Connect(function()
+        State.SelectedMode = mName
+        for _, btn in pairs(ModeBtns) do
+            TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Renkler.SolMenuArka}):Play()
         end
-        TweenService:Create(ModBtn, TweenInfo.new(0.15), {BackgroundColor3 = Renkler.Pembe, TextColor3 = Color3.fromRGB(20,20,20)}):Play()
+        TweenService:Create(mBtn, TweenInfo.new(0.15), {BackgroundColor3 = Renkler.Pembe}):Play()
     end)
 end
 
-YeniObje("TextLabel", {
-    Size = UDim2.new(1, 0, 0, 15), BackgroundTransparency = 1, 
-    Text = "Gizli: Belli etmez · Dengeli: Normal · Sert: En hızlısı", TextColor3 = Renkler.GriYazı, TextSize = 10, Font = Enum.Font.Gotham, TextXAlignment = Enum.TextXAlignment.Center
-}, SavasSayfa)
+SwitchEkle(HVHSayfa, "Camera Aimbot", "Kamerayı yumuşakça hedefe kilitler", false, function(a) State.CameraAimbot = a end)
+SwitchEkle(HVHSayfa, "Auto Shoot · Camera", "Kamera hedefteyken otomatik ateş eder", true, function(a) State.AutoShootCamera = a end)
+SwitchEkle(HVHSayfa, "Crosshair Aimbot", "İmleci (crosshair) hedefe kilitler", true, function(a) State.CrosshairAimbot = a end)
+SwitchEkle(HVHSayfa, "Auto Shoot · Crosshair", "Nişangah hedefteyken otomatik ateş eder", true, function(a) State.AutoShootCrosshair = a end)
+SwitchEkle(HVHSayfa, "Только Мардер (Only Murderer)", "Karakterinde bıçak olan oyuncuya odaklanır", true, function(a) State.OnlyMurderer = a end)
+SwitchEkle(HVHSayfa, "Wall Check", "Duvar arkasındaki oyunculara odaklanmaz", true, function(a) State.WallCheck = a end)
 
--- Motor Bağlantılı Switch'ler
-SwitchEkle(SavasSayfa, "Kamera Aimbot", "Kamerayı otomatik düşmana kilitler", function(a) State.AimbotAktif = a end)
-SwitchEkle(SavasSayfa, "Otomatik Ateş", "Kamera hedefe kilitlenince ateş eder", function(a) State.AutoShootAktif = a end)
-SwitchEkle(SavasSayfa, "Hitbox Büyütme", "Düşmanların vurulma alanını büyütür", function(a) State.HitboxAktif = a end)
+-- DİĞER SEKMELER
+SwitchEkle(VisualSayfa, "Player ESP", "Duvar arkasından oyuncuları gösterir", false, function(a) State.ESP_Aktif = a end)
+SwitchEkle(MoveSayfa, "Fly (Uçuş)", "WASD ile serbest uçuş", false, function(a) State.FlyAktif = a end)
+SwitchEkle(MoveSayfa, "Noclip", "Duvarların içinden geçmenizi sağlar", false, function(a) State.NoclipAktif = a end)
+SwitchEkle(MoveSayfa, "Speed Booster", "Karakter hızını artırır", false, function(a) State.HizAktif = a end)
+SwitchEkle(MiscSayfa, "Hitbox Expander", "Düşmanların vurulma alanını büyütür", false, function(a) State.HitboxAktif = a end)
+SwitchEkle(FarmSayfa, "Auto Grab Gun", "Yerdeki silaha otomatik ışınlanır", false, function(a) State.AutoGunAktif = a end)
 
--- ═══ GÖRSEL SAYFASI ═══
-SwitchEkle(GorselSayfa, "Oyuncu ESP", "Oyuncuları duvar arkasından parlatır", function(a) State.ESP_Aktif = a end)
-SwitchEkle(GorselSayfa, "Silah ESP", "Yerdeki silahları parlatır", function(a) end) -- Motor eklenecek
-
--- ═══ FARM SAYFASI ═══
-SwitchEkle(FarmSayfa, "Otomatik Para Topla", "Yerdeki paraları toplar", function(a) end)
-SwitchEkle(FarmSayfa, "Otomatik Silah Al", "Yerdeki silaha ışınlanır", function(a) State.AutoGunAktif = a end)
-
--- ═══ HAREKET SAYFASI ═══
-SwitchEkle(HareketSayfa, "Fly (Uçuş)", "WASD ile uçmanızı sağlar", function(a) State.FlyAktif = a end)
-SwitchEkle(HareketSayfa, "Noclip", "Duvarlardan geçmenizi sağlar", function(a) State.NoclipAktif = a end)
-SwitchEkle(HareketSayfa, "Hız Artırıcı", "Yürüme hızınızı 100 yapar", function(a) State.HizAktif = a end)
-
--- ═══ MOTOR (ÇALIŞAN KODLAR) ═══
+-- ═══ MOTOR KODLARI ═══
 
 -- ESP
 RunService.RenderStepped:Connect(function()
-    for _, oyuncu in pairs(Players:GetPlayers()) do
-        if oyuncu ~= LP and oyuncu.Character then
-            local highlight = oyuncu.Character:FindFirstChild("NYR_ESP")
-            if State.ESP_Aktif then
-                if not highlight then
-                    highlight = Instance.new("Highlight")
-                    highlight.Name = "NYR_ESP"
-                    highlight.FillColor = Color3.fromRGB(235, 155, 210)
-                    highlight.FillTransparency = 0.5
-                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-                    highlight.Parent = oyuncu.Character
+    pcall(function()
+        for _, oyuncu in pairs(Players:GetPlayers()) do
+            if oyuncu ~= LocalPlayer and oyuncu.Character then
+                local highlight = oyuncu.Character:FindFirstChild("BEST_ESP")
+                if State.ESP_Aktif then
+                    if not highlight then
+                        highlight = Instance.new("Highlight")
+                        highlight.Name = "BEST_ESP"
+                        highlight.FillColor = Renkler.Pembe
+                        highlight.FillTransparency = 0.5
+                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        highlight.Parent = oyuncu.Character
+                    end
+                else
+                    if highlight then highlight:Destroy() end
                 end
-            else
-                if highlight then highlight:Destroy() end
             end
         end
-    end
+    end)
+end)
+
+-- Aimbot & Murderer Kontrolü (Güvenli Düzeltme)
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        if (State.CameraAimbot or State.CrosshairAimbot) and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head") then
+            local enYakin, enKisaMesafe = nil, State.FOV * 10
+            local cam = workspace.CurrentCamera
+            
+            for _, oyuncu in pairs(Players:GetPlayers()) do
+                if oyuncu ~= LocalPlayer and oyuncu.Character and oyuncu.Character:FindFirstChild("Head") then
+                    
+                    -- Katil Kontrolü (Karakter üzerinde bıçak arama)
+                    local hedefGecerli = true
+                    if State.OnlyMurderer then
+                        local hasKnife = oyuncu.Character:FindFirstChild("Knife") or (oyuncu.Character:FindFirstChildOfClass("Tool") and oyuncu.Character:FindFirstChildOfClass("Tool").Name == "Knife")
+                        if not hasKnife then hedefGecerli = false end
+                    end
+                    
+                    if hedefGecerli then
+                        local head = oyuncu.Character.Head
+                        local mesafe = (head.Position - LocalPlayer.Character.Head.Position).Magnitude
+                        
+                        -- Modern Raycast Kontrolü
+                        local wallHit = false
+                        if State.WallCheck then
+                            local raycastParams = RaycastParams.new()
+                            raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, oyuncu.Character}
+                            raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+                            
+                            local result = workspace:Raycast(cam.CFrame.Position, (head.Position - cam.CFrame.Position), raycastParams)
+                            if result then wallHit = true end
+                        end
+                        
+                        if not wallHit and mesafe < enKisaMesafe then
+                            enKisaMesafe = mesafe
+                            enYakin = head
+                        end
+                    end
+                end
+            end
+            
+            if enYakin and State.CameraAimbot then
+                cam.CFrame = CFrame.lookAt(cam.CFrame.Position, enYakin.Position)
+            end
+        end
+    end)
 end)
 
 -- Fly
-local flyBaglanti
+local flyBV = nil
 RunService.RenderStepped:Connect(function()
-    if State.FlyAktif and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
-        if not LP.Character.HumanoidRootPart:FindFirstChild("NYR_Fly") then
-            local BV = Instance.new("BodyVelocity", LP.Character.HumanoidRootPart)
-            BV.Name = "NYR_Fly"
-            BV.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-            flyBaglanti = RunService.RenderStepped:Connect(function()
-                BV.Velocity = Vector3.new(0, 0, 0)
-                if UserInputService:IsKeyDown(Enum.KeyCode.W) then BV.Velocity = BV.Velocity + workspace.CurrentCamera.CFrame.LookVector * 50 end
-                if UserInputService:IsKeyDown(Enum.KeyCode.S) then BV.Velocity = BV.Velocity - workspace.CurrentCamera.CFrame.LookVector * 50 end
-                if UserInputService:IsKeyDown(Enum.KeyCode.A) then BV.Velocity = BV.Velocity - workspace.CurrentCamera.CFrame.RightVector * 50 end
-                if UserInputService:IsKeyDown(Enum.KeyCode.D) then BV.Velocity = BV.Velocity + workspace.CurrentCamera.CFrame.RightVector * 50 end
-            end)
+    pcall(function()
+        local char = LocalPlayer.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+        local hrp = char.HumanoidRootPart
+
+        if State.FlyAktif then
+            if not flyBV or flyBV.Parent ~= hrp then
+                if hrp:FindFirstChild("BEST_Fly") then hrp.BEST_Fly:Destroy() end
+                flyBV = Instance.new("BodyVelocity")
+                flyBV.Name = "BEST_Fly"
+                flyBV.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+                flyBV.Parent = hrp
+            end
+            local cam = workspace.CurrentCamera
+            local moveDir = Vector3.new(0,0,0)
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0,1,0) end
+            
+            flyBV.Velocity = moveDir * 50
+        else
+            if hrp:FindFirstChild("BEST_Fly") then hrp.BEST_Fly:Destroy() end
+            flyBV = nil
         end
-    elseif not State.FlyAktif and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
-        if LP.Character.HumanoidRootPart:FindFirstChild("NYR_Fly") then
-            LP.Character.HumanoidRootPart.NYR_Fly:Destroy()
-        end
-        if flyBaglanti then flyBaglanti:Disconnect() end
-    end
+    end)
 end)
 
 -- Noclip
 RunService.Stepped:Connect(function()
-    if State.NoclipAktif and LP.Character then
-        for _, v in pairs(LP.Character:GetDescendants()) do
-            if v:IsA("BasePart") and v.CanCollide then v.CanCollide = false end
+    pcall(function()
+        if State.NoclipAktif and LocalPlayer.Character then
+            for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+                if v:IsA("BasePart") and v.CanCollide then v.CanCollide = false end
+            end
         end
-    end
+    end)
 end)
 
 -- Hız
 RunService.RenderStepped:Connect(function()
-    if LP.Character and LP.Character:FindFirstChild("Humanoid") then
-        if State.HizAktif then
-            LP.Character.Humanoid.WalkSpeed = 100
-        else
-            LP.Character.Humanoid.WalkSpeed = 16
+    pcall(function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = State.HizAktif and 80 or 16
         end
-    end
+    end)
 end)
 
--- Hitbox
+-- Hitbox Expander
 RunService.RenderStepped:Connect(function()
-    for _, oyuncu in pairs(Players:GetPlayers()) do
-        if oyuncu ~= LP and oyuncu.Character and oyuncu.Character:FindFirstChild("HumanoidRootPart") then
-            if State.HitboxAktif then
-                oyuncu.Character.HumanoidRootPart.Size = Vector3.new(10, 10, 10)
-                oyuncu.Character.HumanoidRootPart.Transparency = 0.5
-                oyuncu.Character.HumanoidRootPart.CanCollide = false
-            else
-                oyuncu.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
-                oyuncu.Character.HumanoidRootPart.Transparency = 1
-            end
-        end
-    end
-end)
-
--- Aimbot
-RunService.RenderStepped:Connect(function()
-    if State.AimbotAktif and LP.Character and LP.Character:FindFirstChild("Head") then
-        local enYakin, enKisaMesafe = nil, math.huge
+    pcall(function()
         for _, oyuncu in pairs(Players:GetPlayers()) do
-            if oyuncu ~= LP and oyuncu.Character and oyuncu.Character:FindFirstChild("Head") then
-                local mesafe = (oyuncu.Character.Head.Position - LP.Character.Head.Position).Magnitude
-                if mesafe < enKisaMesafe then
-                    enKisaMesafe = mesafe
-                    enYakin = oyuncu.Character.Head
+            if oyuncu ~= LocalPlayer and oyuncu.Character and oyuncu.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = oyuncu.Character.HumanoidRootPart
+                if State.HitboxAktif then
+                    hrp.Size = Vector3.new(10, 10, 10)
+                    hrp.Transparency = 0.6
+                    hrp.CanCollide = false
+                else
+                    hrp.Size = Vector3.new(2, 2, 1)
+                    hrp.Transparency = 1
                 end
             end
         end
-        if enYakin then
-            local kameraPos = workspace.CurrentCamera.CFrame.Position
-            workspace.CurrentCamera.CFrame = CFrame.lookAt(kameraPos, enYakin.Position)
-        end
-    end
+    end)
 end)
 
--- Auto Grab Gun
+-- Auto Grab Gun (Eksik olan döngü eklendi)
 task.spawn(function()
-    while true do
-        task.wait(0.5)
-        if State.AutoGunAktif then
-            local silah = workspace:FindFirstChild("GunDrop") or workspace:FindFirstChild("Revolver")
-            if silah and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
-                LP.Character.HumanoidRootPart.CFrame = silah.CFrame
+    while task.wait(0.5) do
+        pcall(function()
+            if State.AutoGunAktif then
+                local silah = workspace:FindFirstChild("GunDrop") or workspace:FindFirstChild("Revolver")
+                if silah and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = silah.CFrame
+                end
             end
-        end
+        end)
     end
 end)
 
--- Varsayılan olarak Savaş sekmesini aç
-Sekmeler["Savaş"].Buton.MouseButton1Click:Fire()
-print("✅ NYR (UI + Motor) Başarıyla Yüklendi!")
+-- Varsayılan sekmeyi aç
+Sekmeler["HVH"].Buton.MouseButton1Click:Fire()
+print("✅ [BEST CLIENT v10.13] Sorunsuz Yüklendi!")
